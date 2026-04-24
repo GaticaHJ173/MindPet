@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export default function AuthScreen() {
@@ -111,17 +111,15 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header protegido con SafeAreaView */}
-      <SafeAreaView style={styles.safeHeader}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <FontAwesome name="paw" size={48} color="#9183af" style={styles.pawIcon} />
-            <Text style={styles.title}>MindPet</Text>
-          </View>
-          <Text style={styles.subtitle}>Cuida tu mascota digital</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.titleContainer}>
+          <FontAwesome name="paw" size={48} color="#9183af" style={styles.pawIcon} />
+          <Text style={styles.title}>MindPet</Text>
         </View>
-      </SafeAreaView>
+        <Text style={styles.subtitle}>Cuida tu mascota digital</Text>
+      </View>
 
       {/* Formulario en KeyboardAvoidingView con ScrollView */}
       <KeyboardAvoidingView
@@ -202,7 +200,7 @@ export default function AuthScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -214,9 +212,6 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  safeHeader: {
-    backgroundColor: '#f5f5f5',
-  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -224,7 +219,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 30,
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
   },

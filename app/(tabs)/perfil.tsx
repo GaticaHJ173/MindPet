@@ -1,17 +1,17 @@
+import { supabase } from '@/lib/supabase';
+import { useUserStore } from '@/store/useUserStore';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useUserStore } from '@/store/useUserStore';
-import { supabase } from '@/lib/supabase';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function PerfilScreen() {
           try {
             await supabase.auth.signOut();
             useUserStore.getState().clearUser();
+            router.replace('/auth');
           } catch (error) {
             Alert.alert('Error', 'No se pudo cerrar la sesión');
           }
@@ -154,12 +155,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fb',
   },
   header: {
-    height: 60,
+    height: 120,
     backgroundColor: '#9183af',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
+    paddingTop: 30,
   },
   menuButton: {
     padding: 8,

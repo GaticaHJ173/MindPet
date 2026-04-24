@@ -141,12 +141,13 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   header: {
-    height: 60,
+    height: 120,
     backgroundColor: '#9183af',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
+    paddingTop: 30,
   },
   menuButton: {
     padding: 8,

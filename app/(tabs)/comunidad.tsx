@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ComunidadScreen() {
   const router = useRouter();
@@ -46,12 +46,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fb',
   },
   header: {
-    height: 60,
+    height: 120,
     backgroundColor: '#9183af',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
+    paddingTop: 30,
   },
   menuButton: {
     padding: 8,
