@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  TextInput,
+  RefreshControl,
 } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { obtenerHabitos, actualizarHabito } from '@/lib/habitos';
+import { obtenerHabitos, actualizarHabito, guardarHabito, eliminarHabito } from '@/lib/habitos';
 
 interface Habito {
   id: string;
@@ -26,12 +28,74 @@ export default function HabitosScreen() {
   const router = useRouter();
   const [habitos, setHabitos] = useState<Habito[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    descripcion: '',
+    icono: 'water',
+    color: '#4ECDC4',
+  });
 
   // Cargar hábitos desde Supabase al iniciar
   useEffect(() => {
     cargarHabitos();
   }, []);
+
+  // Agregar nuevo hábito
+  const agregarHabito = async () => {
+    if (!formData.nombre.trim() || !formData.descripcion.trim()) {
+      Alert.alert('Error', 'Nombre y descripción son requeridos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await guardarHabito({
+        ...formData,
+        completado: false,
+      } as any);
+      setFormData({ nombre: '', descripcion: '', icono: 'water', color: '#4ECDC4' });
+      setShowForm(false);
+      await cargarHabitos();
+      Alert.alert('Éxito', 'Hábito agregado correctamente');
+    } catch (err: any) {
+      Alert.alert('Error', 'No se pudo agregar el hábito');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Eliminar hábito
+  const handleEliminarHabito = (id: string) => {
+    Alert.alert(
+      'Eliminar hábito',
+      '¿Estás seguro? Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await eliminarHabito(id);
+              setHabitos(habitos.filter((h) => h.id !== id));
+            } catch (err: any) {
+              Alert.alert('Error', 'No se pudo eliminar el hábito');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Refresh list
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await cargarHabitos();
+    setRefreshing(false);
+  };
 
   const cargarHabitos = async () => {
     try {
@@ -40,8 +104,9 @@ export default function HabitosScreen() {
       const data = await obtenerHabitos();
       setHabitos(data || []);
     } catch (err: any) {
+      console.error('Error hábitos:', err);
       setError(err.message || 'Error al cargar hábitos');
-      Alert.alert('Error', 'No se pudieron cargar los hábitos');
+      // No mostrar Alert cada vez - solo log para debug
     } finally {
       setLoading(false);
     }
@@ -110,7 +175,12 @@ export default function HabitosScreen() {
       </SafeAreaView>
 
       {/* Contenido en ScrollView */}
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9183af" />
+        }
+      >
         {/* Subencabezado */}
         <View style={styles.subtitle}>
           <Text style={styles.subtitleText}>Construye mejores rutinas</Text>
@@ -131,17 +201,105 @@ export default function HabitosScreen() {
           </View>
         </View>
 
-        {/* Lista de Hábitos */}
+        {/* Botón Agregar Hábito */}
+        <TouchableOpacity 
+          style={styles.agregarButton} 
+          onPress={() => setShowForm(!showForm)}
+          activeOpacity={0.7}
+        >
+          <FontAwesome name="plus" size={20} color="#fff" />
+          <Text style={styles.agregarButtonText}>
+            {showForm ? 'Cancelar' : 'Agregar Nuevo Hábito'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Formulario de Registro */}
+        {showForm && (
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Nuevo Hábito</Text>
+            
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre del hábito (ej: Beber agua)"
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Descripción (ej: 2 litros al día)"
+                value={formData.descripcion}
+                onChangeText={(text) => setFormData({ ...formData, descripcion: text })}
+                placeholderTextColor="#999"
+                multiline
+                numberOfLines={2}
+              />
+            </View>
+
+            {/* Iconos */}
+            <Text style={styles.label}>Icono:</Text>
+            <View style={styles.iconRow}>
+              {[
+                { name: 'water', icon: 'water' },
+                { name: 'bed', icon: 'bed' },
+                { name: 'run', icon: 'run' },
+                { name: 'apple', icon: 'apple' },
+                { name: 'book', icon: 'book-open' },
+                { name: 'meditation', icon: 'yoga' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.name}
+                  style={[
+                    styles.iconButton,
+                    formData.icono === item.icon && styles.iconButtonSelected,
+                  ]}
+                  onPress={() => setFormData({ ...formData, icono: item.icon })}
+                >
+                  <MaterialCommunityIcons name={item.icon as any} size={24} color="#fff" />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Colores */}
+            <Text style={styles.label}>Color:</Text>
+            <View style={styles.colorRow}>
+              {[
+                '#4ECDC4', '#FF6B6B', '#FFE66D', '#95E1D3', '#A8E6CF', '#9183AF'
+              ].map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorButton,
+                    formData.color === color && styles.colorButtonSelected,
+                  ]}
+                  onPress={() => setFormData({ ...formData, color })}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.guardarButton} onPress={agregarHabito}>
+              <Text style={styles.guardarButtonText}>Guardar Hábito</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+
+        {/* Lista de Hábitos Registrados */}
         {habitos.length === 0 ? (
           <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="plus-circle-outline" size={64} color="#ccc" />
             <Text style={styles.emptyStateText}>No tienes hábitos registrados</Text>
             <Text style={styles.emptyStateSubtext}>
-              Próximamente podrás agregar tus propios hábitos
+              Toca el botón + para agregar tu primer hábito diario
             </Text>
           </View>
         ) : (
           <View style={styles.habitosSection}>
-            <Text style={styles.sectionTitle}>Tus Hábitos Diarios</Text>
+            <Text style={styles.sectionTitle}>Hábitos Registrados</Text>
             {habitos.map((habito) => (
               <View
                 key={habito.id}
@@ -198,6 +356,14 @@ export default function HabitosScreen() {
                       )}
                     </View>
                   </View>
+                </TouchableOpacity>
+
+                {/* Botón Eliminar */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleEliminarHabito(habito.id)}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -306,6 +472,132 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+  agregarButton: {
+    flexDirection: 'row',
+    backgroundColor: '#9183af',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  agregarButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  formSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+    paddingTop: 14,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  iconButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#e9ecef',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginBottom: 12,
+  },
+  iconButtonSelected: {
+    backgroundColor: '#9183af',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  colorButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  colorButtonSelected: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+    borderWidth: 4,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  guardarButton: {
+    backgroundColor: '#4ECDC4',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  guardarButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   habitosSection: {
     paddingHorizontal: 20,
   },
@@ -319,7 +611,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 12,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -375,6 +666,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  deleteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   emptyState: {
     paddingVertical: 60,
     alignItems: 'center',
@@ -383,10 +690,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#999',
+    marginTop: 16,
   },
   emptyStateSubtext: {
     fontSize: 14,
     color: '#ccc',
     marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
 });

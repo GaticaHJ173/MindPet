@@ -6,28 +6,31 @@ export function useAuth() {
   const { fetchUserData, clearUser } = useUserStore();
 
   useEffect(() => {
-    // Obtén la sesión actual y carga datos del usuario
+    console.log('[useAuth] 🚀 Hook inicializado');
+
     const setupAuth = async () => {
       try {
+        console.log('[useAuth] 🔍 Obteniendo sesión inicial...');
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id) {
+          console.log('[useAuth] 📱 Usuario detectado:', session.user.id);
           await fetchUserData(session.user.id);
+        } else {
+          console.log('[useAuth] ❌ No hay sesión');
         }
       } catch (err: any) {
-        console.log('Error in setupAuth:', err);
+        console.error('[useAuth] 💥 Error setup:', err.message);
       }
     };
 
     setupAuth();
 
-    // Escucha cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: string, session: any) => {
+      async (event, session) => {
+        console.log('[useAuth] 🔄 Cambio auth:', event, session?.user?.id || 'null');
         if (session?.user?.id) {
-          // Usuario inicia sesión
           await fetchUserData(session.user.id);
         } else {
-          // Usuario cierra sesión
           clearUser();
         }
       }
@@ -38,3 +41,4 @@ export function useAuth() {
     };
   }, [fetchUserData, clearUser]);
 }
+

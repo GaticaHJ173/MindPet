@@ -164,7 +164,7 @@ export default function AuthScreen() {
               onChangeText={setPassword}
               secureTextEntry
               editable={!loading}
-              placeholderTextColor="#bbb"
+              placeholderTextColor="#000000"
             />
 
             <TouchableOpacity

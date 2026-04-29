@@ -11,15 +11,17 @@ interface UserState {
   fetchUserData: (userId: string) => Promise<void>;
   logout: () => Promise<void>;
   clearUser: () => void;
+  isAuthenticated: boolean;
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set, get) => ({
   userId: null,
   nombre: '',
   email: null,
   bienestarScore: 0,
   mascota: {},
   loading: false,
+  isAuthenticated: false,
 
   fetchUserData: async (userId) => {
     set({ loading: true });
@@ -38,6 +40,7 @@ export const useUserStore = create<UserState>((set) => ({
           bienestarScore: data.bienestar_score,
           mascota: data.metas_mascota,
           loading: false,
+          isAuthenticated: true
         });
       } else if (error) {
         console.log('Error fetching user:', error);
@@ -58,6 +61,7 @@ export const useUserStore = create<UserState>((set) => ({
         email: null,
         bienestarScore: 0,
         mascota: {},
+        isAuthenticated: false
       });
     } catch (err) {
       console.log('Error logout:', err);
@@ -71,6 +75,8 @@ export const useUserStore = create<UserState>((set) => ({
       email: null,
       bienestarScore: 0,
       mascota: {},
+      isAuthenticated: false
     });
   },
 }));
+

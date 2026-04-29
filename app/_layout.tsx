@@ -8,17 +8,27 @@ export default function RootLayout() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Inicializa auth y carga datos del usuario
   useAuth();
 
   useEffect(() => {
-    // 1. Obtén la sesión actual
+    console.log('[LAYOUT] 🚀 Layout mounted');
+
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
+        console.log('[AUTH] 🔍 Fetching session from storage...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        console.log('[AUTH] 📱 Session:', session?.user ? `${session.user.id} (${session.user.email})` : 'NO SESSION');
+if (session?.access_token && Date.parse(session.expires_at) < Date.now()) {
+          console.log('[AUTH] ⚠️ Token expired, signing out');
+          await supabase.auth.signOut();
+          setSession(null);
+        } else {
+          setSession(session);
+        }
       } catch (err) {
-        console.log('Error getting session:', err);
+        console.error('[AUTH] 💥 Session error:', err);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -26,16 +36,12 @@ export default function RootLayout() {
 
     getSession();
 
-    // 2. Setup listener para cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: string, session: any) => {
-        setSession(session);
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      console.log('[AUTH] 🔄 Event:', event, 'user:', s?.user?.id || null);
+      setSession(s);
+    });
 
-    return () => {
-      subscription?.unsubscribe();
-    };
+    return () => subscription?.unsubscribe();
   }, []);
 
   if (loading) {
@@ -46,15 +52,17 @@ export default function RootLayout() {
     );
   }
 
+  const showTabs = !!session?.user;
+  console.log('[LAYOUT] 🎯 Show tabs:', showTabs);
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {session?.user ? (
-        // USUARIO LOGUEADO → Muestra tabs
+      {showTabs ? (
         <Stack.Screen name="(tabs)" />
       ) : (
-        // SIN LOGIN → Muestra auth (login/registro)
         <Stack.Screen name="auth" />
       )}
     </Stack>
   );
 }
+

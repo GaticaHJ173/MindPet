@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { useUserStore } from '@/store/useUserStore';
+import { useUserStore } from '../store/useUserStore';
 
 export interface Habito {
   id?: string;
@@ -14,7 +14,8 @@ export interface Habito {
 
 // Guardar un nuevo hábito
 export async function guardarHabito(habito: Habito) {
-  const { id: usuarioId } = useUserStore.getState();
+  const userStore = useUserStore.getState();
+  const usuarioId = userStore.userId;
   
   if (!usuarioId) {
     throw new Error('Usuario no autenticado');
@@ -39,7 +40,8 @@ export async function guardarHabito(habito: Habito) {
 
 // Obtener hábitos del usuario
 export async function obtenerHabitos() {
-  const { id: usuarioId } = useUserStore.getState();
+  const userStore = useUserStore.getState();
+  const usuarioId = userStore.userId;
 
   if (!usuarioId) {
     throw new Error('Usuario no autenticado');
