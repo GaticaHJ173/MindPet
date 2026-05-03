@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -38,12 +38,10 @@ export default function HabitosScreen() {
     color: '#4ECDC4',
   });
 
-  // Cargar hábitos desde Supabase al iniciar
   useEffect(() => {
     cargarHabitos();
   }, []);
 
-  // Agregar nuevo hábito
   const agregarHabito = async () => {
     if (!formData.nombre.trim() || !formData.descripcion.trim()) {
       Alert.alert('Error', 'Nombre y descripción son requeridos');
@@ -67,7 +65,6 @@ export default function HabitosScreen() {
     }
   };
 
-  // Eliminar hábito
   const handleEliminarHabito = (id: string) => {
     Alert.alert(
       'Eliminar hábito',
@@ -90,7 +87,6 @@ export default function HabitosScreen() {
     );
   };
 
-  // Refresh list
   const onRefresh = async () => {
     setRefreshing(true);
     await cargarHabitos();
@@ -106,27 +102,22 @@ export default function HabitosScreen() {
     } catch (err: any) {
       console.error('Error hábitos:', err);
       setError(err.message || 'Error al cargar hábitos');
-      // No mostrar Alert cada vez - solo log para debug
     } finally {
       setLoading(false);
     }
   };
 
-  // Actualizar hábito en BD
   const toggleHabito = async (id: string) => {
     try {
       const habito = habitos.find((h) => h.id === id);
       if (!habito) return;
 
-      // Actualizar en estado local primero (UX mejor)
       setHabitos((prev) =>
         prev.map((h) => (h.id === id ? { ...h, completado: !h.completado } : h))
       );
 
-      // Actualizar en BD
       await actualizarHabito(id, !habito.completado);
     } catch (err: any) {
-      // Revertir cambio si hay error
       setHabitos((prev) =>
         prev.map((h) => (h.id === id ? { ...h, completado: !h.completado } : h))
       );
@@ -161,7 +152,6 @@ export default function HabitosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header protegido con SafeAreaView */}
       <SafeAreaView style={styles.safeHeader}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.menuButton}>
@@ -174,19 +164,16 @@ export default function HabitosScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Contenido en ScrollView */}
       <ScrollView 
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9183af" />
         }
       >
-        {/* Subencabezado */}
         <View style={styles.subtitle}>
           <Text style={styles.subtitleText}>Construye mejores rutinas</Text>
         </View>
 
-        {/* Progreso */}
         <View style={styles.progressSection}>
           <View style={styles.progressCard}>
             <View style={styles.circuloProgreso}>
@@ -201,19 +188,17 @@ export default function HabitosScreen() {
           </View>
         </View>
 
-        {/* Botón Agregar Hábito */}
         <TouchableOpacity 
           style={styles.agregarButton} 
           onPress={() => setShowForm(!showForm)}
           activeOpacity={0.7}
         >
-          <FontAwesome name="plus" size={20} color="#fff" />
+          <FontAwesome name={showForm ? "times" : "plus"} size={20} color="#fff" />
           <Text style={styles.agregarButtonText}>
             {showForm ? 'Cancelar' : 'Agregar Nuevo Hábito'}
           </Text>
         </TouchableOpacity>
 
-        {/* Formulario de Registro */}
         {showForm && (
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Nuevo Hábito</Text>
@@ -240,7 +225,6 @@ export default function HabitosScreen() {
               />
             </View>
 
-            {/* Iconos */}
             <Text style={styles.label}>Icono:</Text>
             <View style={styles.iconRow}>
               {[
@@ -249,7 +233,7 @@ export default function HabitosScreen() {
                 { name: 'run', icon: 'run' },
                 { name: 'apple', icon: 'apple' },
                 { name: 'book', icon: 'book-open' },
-                { name: 'meditation', icon: 'yoga' },
+                { name: 'yoga', icon: 'yoga' },
               ].map((item) => (
                 <TouchableOpacity
                   key={item.name}
@@ -264,7 +248,6 @@ export default function HabitosScreen() {
               ))}
             </View>
 
-            {/* Colores */}
             <Text style={styles.label}>Color:</Text>
             <View style={styles.colorRow}>
               {[
@@ -274,6 +257,7 @@ export default function HabitosScreen() {
                   key={color}
                   style={[
                     styles.colorButton,
+                    { backgroundColor: color },
                     formData.color === color && styles.colorButtonSelected,
                   ]}
                   onPress={() => setFormData({ ...formData, color })}
@@ -287,8 +271,6 @@ export default function HabitosScreen() {
           </View>
         )}
 
-
-        {/* Lista de Hábitos Registrados */}
         {habitos.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="plus-circle-outline" size={64} color="#ccc" />
@@ -336,34 +318,24 @@ export default function HabitosScreen() {
                     <Text style={styles.habitoDescripcion}>{habito.descripcion}</Text>
                   </View>
 
-                  <View style={styles.checkboxContainer}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        {
-                          backgroundColor: habito.completado ? '#9183af' : 'transparent',
-                          borderColor: habito.completado ? '#9183af' : '#ddd',
-                        },
-                      ]}
+                  <View style={styles.rightActions}>
+                    <TouchableOpacity
+                      style={styles.checkbox}
+                      onPress={() => toggleHabito(habito.id)}
                     >
-                      {habito.completado && (
-                        <Ionicons
-                          name="checkmark"
-                          size={16}
-                          color="#fff"
-                          style={{ alignSelf: 'center', marginTop: 4 }}
-                        />
+                      {habito.completado ? (
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                      ) : (
+                        <View style={styles.checkboxBorder} />
                       )}
-                    </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleEliminarHabito(habito.id)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+                    </TouchableOpacity>
                   </View>
-                </TouchableOpacity>
-
-                {/* Botón Eliminar */}
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleEliminarHabito(habito.id)}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -455,9 +427,11 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   porcentajeText: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#fff',
+    textAlign: 'center',
+    lineHeight: 32,
   },
   progressInfo: {
     flex: 1,
@@ -559,20 +533,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   colorButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colorButtonSelected: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     marginRight: 12,
     borderWidth: 4,
     borderColor: '#fff',
@@ -653,34 +629,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
   },
-  checkboxContainer: {
-    justifyContent: 'center',
+  rightActions: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   checkbox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    backgroundColor: '#9183af',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  checkboxBorder: {
     width: 28,
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
     borderColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   deleteButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 20,
     width: 36,
     height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,107,107,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   emptyState: {
     paddingVertical: 60,
@@ -700,3 +682,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
 });
+

@@ -1,83 +1,64 @@
-import React from 'react';
+
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
+  ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
 } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/useUserStore';
-import { FontAwesome, MaterialIcons, Ionicons, Fontisto } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase';
+import { MaterialIcons } from '@expo/vector-icons';
+import { obtenerHabitos } from '@/lib/habitos';
 
 export default function HomeScreen() {
+  const [habitosStats, setHabitosStats] = useState({ total: 0, completados: 0, porcentaje: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
+  const nombre = useUserStore((state) => state.nombre) || 'Usuario';
+  const userId = useUserStore((state) => state.userId);
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const router = useRouter();
-  const { nombre } = useUserStore();
 
-  const menuItems = [
-    {
-      title: 'Diario Emocional',
-      description: 'Registra cómo te sientes',
-      icon: 'event-note',
-      color: '#FF6B6B',
-      route: '/(tabs)/diario',
-      iconType: 'material',
-    },
-    {
-      title: 'Mi Mascota',
-      description: 'Cuida a tu compañero digital',
-      icon: 'pets',
-      color: '#4ECDC4',
-      route: '/(tabs)/mascota',
-      iconType: 'material',
-    },
-    {
-      title: 'Mis Hábitos',
-      description: 'Mejora tu rutina diaria',
-      icon: 'check',
-      color: '#FFE66D',
-      route: '/(tabs)/habitos',
-      iconType: 'fontisto',
-    },
-    {
-      title: 'Comunidad',
-      description: 'Conecta con otros usuarios',
-      icon: 'group',
-      color: '#95E1D3',
-      route: '/(tabs)/comunidad',
-      iconType: 'font-awesome',
-    },
-    {
-      title: 'Mi Perfil',
-      description: 'Gestiona tu cuenta',
-      icon: 'person',
-      color: '#A8E6CF',
-      route: '/(tabs)/perfil',
-      iconType: 'ionicons',
-    },
-  ];
-
-  const renderIcon = (item: any) => {
-    switch (item.iconType) {
-      case 'material':
-        return <MaterialIcons name={item.icon} size={40} color="#fff" />;
-      case 'fontisto':
-        return <Fontisto name={item.icon} size={32} color="#fff" />;
-      case 'font-awesome':
-        return <FontAwesome name={item.icon} size={40} color="#fff" />;
-      case 'ionicons':
-        return <Ionicons name={item.icon} size={40} color="#fff" />;
-      default:
-        return <MaterialIcons name={item.icon} size={40} color="#fff" />;
+  const loadHabitosStats = async () => {
+    try {
+      setLoadingStats(true);
+      const habitos = await obtenerHabitos();
+      const total = habitos.length;
+      const completados = habitos.filter((h) => h.completado).length;
+      const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+      setHabitosStats({ total, completados, porcentaje });
+    } catch (error) {
+      console.error('Error loading hábitos:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
+  useEffect(() => {
+    if (!userId || !isAuthenticated) {
+      setLoadingStats(false);
+      return;
+    }
+    loadHabitosStats();
+  }, [userId, isAuthenticated]);
+
+  const menuItems = [
+    { title: 'Diario', icon: 'event-note', color: '#FF6B6B', route: '/(tabs)/diario' },
+    { title: 'Mascota', icon: 'pets', color: '#4ECDC4', route: '/(tabs)/mascota' },
+    { title: 'Hábitos', icon: 'check-circle', color: '#FFE66D', route: '/(tabs)/habitos' },
+    { title: 'Comunidad', icon: 'group', color: '#95E1D3', route: '/(tabs)/comunidad' },
+  ];
+
+  const renderIcon = (item) => (
+    <MaterialIcons name={item.icon} size={52} color="#fff" />
+  );
+
   return (
     <View style={styles.container}>
-      {/* Header protegido con SafeAreaView */}
+      {/* Header intacto */}
       <SafeAreaView style={styles.safeHeader}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.menuButton}>
@@ -90,40 +71,53 @@ export default function HomeScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Contenido en ScrollView */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
         {/* Bienvenida */}
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeGreeting}>¡Hola, {nombre || 'Usuario'}!</Text>
-          <Text style={styles.welcomeSubtitle}>Hoy es un buen día para cuidarte</Text>
+          <Text style={styles.welcomeGreeting}>¡Hola, {nombre}!</Text>
+          <Text style={styles.welcomeSubtitle}>Elige qué hacer hoy</Text>
         </View>
 
-        {/* Menu Grid */}
+        {/* Grid 2x2 optimizado */}
         <View style={styles.menuGrid}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => router.push(item.route)}
               activeOpacity={0.8}
             >
               <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
                 {renderIcon(item)}
               </View>
               <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemDescription}>{item.description}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Stats or motivational section */}
-        <View style={styles.motivationalSection}>
-          <Text style={styles.motivationalTitle}>Te estamos esperando</Text>
-          <Text style={styles.motivationalText}>
-            Cada acción cuenta. Sigue adelante con tu bienestar y ayuda a tu mascota digital a crecer.
-          </Text>
+        {/* Stats hábitos */}
+        <View style={styles.statsSection}>
+          <Text style={styles.statsTitle}>Progreso Hábitos</Text>
+          {(!userId || !isAuthenticated) ? (
+            <Text style={styles.statsPercentage}>Iniciando...</Text>
+          ) : loadingStats ? (
+            <ActivityIndicator size="small" color="#9183AF" />
+          ) : (
+            <View>
+              <Text style={styles.statsValue}>{habitosStats.completados}/{habitosStats.total}</Text>
+              <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${habitosStats.porcentaje}%` }]} />
+              </View>
+              <Text style={styles.statsPercentage}>{habitosStats.porcentaje}%</Text>
+            </View>
+          )}
         </View>
+
+        {/* CTA */}
+        <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/(tabs)/diario')} activeOpacity={0.8}>
+          <MaterialIcons name="edit" size={24} color="#fff" />
+          <Text style={styles.ctaText}>Empezar Diario Hoy</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -138,7 +132,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fb',
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 40,
+    paddingHorizontal: 12,
   },
   header: {
     height: 120,
@@ -166,72 +161,115 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   welcomeSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 8,
+    alignItems: 'center',
   },
   welcomeGreeting: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: '#333',
     marginBottom: 4,
   },
   welcomeSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
-    fontWeight: '500',
   },
   menuGrid: {
-    paddingHorizontal: 12,
-    marginBottom: 30,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    marginBottom: 32,
   },
   menuItem: {
+    width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 8,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
+    width: 72,
+    height: 72,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   itemTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
+    textAlign: 'center',
   },
-  itemDescription: {
-    fontSize: 13,
-    color: '#999',
-    lineHeight: 18,
+  statsSection: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    marginHorizontal: 8,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  motivationalSection: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 20,
-    backgroundColor: '#9183af',
-    borderRadius: 16,
-  },
-  motivationalTitle: {
+  statsTitle: {
     fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  statsValue: {
+    fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: '#9183AF',
     marginBottom: 8,
   },
-  motivationalText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 20,
+  progressContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#4ECDC4',
+    borderRadius: 4,
+  },
+  statsPercentage: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4ECDC4',
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    backgroundColor: '#9183AF',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  ctaText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 12,
   },
 });
-
