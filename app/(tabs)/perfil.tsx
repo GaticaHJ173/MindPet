@@ -27,9 +27,10 @@ export default function PerfilScreen() {
             await supabase.auth.signOut();
             useUserStore.getState().clearUser();
             router.replace('/auth');
-          } catch (error) {
+          } catch (e) {
             Alert.alert('Error', 'No se pudo cerrar la sesión');
           }
+
         },
         style: 'destructive',
       },
@@ -67,22 +68,18 @@ export default function PerfilScreen() {
     <View style={styles.container}>
       {/* Header protegido con SafeAreaView */}
       <SafeAreaView style={styles.safeHeader}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.menuButton}>
-            <Text style={styles.menuIcon}>☰</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Perfil</Text>
-          <View style={styles.profileIconPlaceholder} />
-        </View>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.menuButton}>
+              <Text style={styles.menuIcon}>☰</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Perfil</Text>
+            <View style={styles.profileIconPlaceholder} />
+          </View>
+
       </SafeAreaView>
 
       {/* Contenido en ScrollView */}
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Subencabezado */}
-        <View style={styles.subtitle}>
-          <Text style={styles.subtitleText}>Gestiona tu cuenta</Text>
-        </View>
 
         {/* Tarjeta de Perfil */}
         <View style={styles.profileCard}>
@@ -149,10 +146,10 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#f6f7fb',
   },
   safeHeader: {
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#f6f7fb',
   },
   header: {
     height: 120,
@@ -167,119 +164,123 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   menuIcon: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#fff',
   },
   profileIconPlaceholder: {
-    width: 24,
+    width: 22,
   },
   subtitle: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
   },
   subtitleText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '600',
   },
   profileCard: {
-    marginHorizontal: 20,
-    marginTop: 24,
+    marginHorizontal: 18,
+    marginTop: 16,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 14,
+    padding: 18,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eef0f5',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   avatarContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   profileName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1f2937',
+    marginBottom: 2,
   },
   profileEmail: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 20,
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 14,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    paddingTop: 16,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#edf0f6',
   },
   stat: {
     flex: 1,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: '#9183af',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 11,
+    color: '#6b7280',
   },
   divider: {
     width: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#edf0f6',
   },
   menuSection: {
-    marginHorizontal: 20,
-    marginTop: 24,
+    marginHorizontal: 18,
+    marginTop: 16,
   },
   menuItem: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 14,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#eef0f5',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   menuContent: {
     flex: 1,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
   },
   menuDescription: {
-    fontSize: 13,
-    color: '#999',
+    fontSize: 12,
+    color: '#6b7280',
   },
   logoutButton: {
-    marginHorizontal: 20,
-    marginTop: 24,
+    marginHorizontal: 18,
+    marginTop: 16,
     marginBottom: 16,
     backgroundColor: '#FF6B6B',
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -287,7 +288,8 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
+    fontWeight: '800',
+    fontSize: 15,
   },
 });
+

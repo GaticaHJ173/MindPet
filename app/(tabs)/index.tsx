@@ -9,10 +9,17 @@ import {
   StyleSheet,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
+
+
 import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/useUserStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { obtenerHabitos } from '@/lib/habitos';
+import { useHabitosStatsStore } from '@/store/habitosStatsStore';
+
+
+
+
 
 export default function HomeScreen() {
   const [habitosStats, setHabitosStats] = useState({ total: 0, completados: 0, porcentaje: 0 });
@@ -37,13 +44,16 @@ export default function HomeScreen() {
     }
   };
 
+  const version = useHabitosStatsStore((s) => s.version);
+
   useEffect(() => {
     if (!userId || !isAuthenticated) {
       setLoadingStats(false);
       return;
     }
     loadHabitosStats();
-  }, [userId, isAuthenticated]);
+  }, [userId, isAuthenticated, version]);
+
 
   const menuItems = [
     { title: 'Diario', icon: 'event-note', color: '#FF6B6B', route: '/(tabs)/diario' },

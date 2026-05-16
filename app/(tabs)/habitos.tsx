@@ -14,6 +14,8 @@ import {
 import { MaterialCommunityIcons, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { obtenerHabitos, actualizarHabito, guardarHabito, eliminarHabito } from '@/lib/habitos';
+import { useHabitosStatsStore } from '@/store/habitosStatsStore';
+
 
 interface Habito {
   id: string;
@@ -54,6 +56,8 @@ export default function HabitosScreen() {
         ...formData,
         completado: false,
       } as any);
+      bumpVersion();
+
       setFormData({ nombre: '', descripcion: '', icono: 'water', color: '#4ECDC4' });
       setShowForm(false);
       await cargarHabitos();
@@ -77,6 +81,8 @@ export default function HabitosScreen() {
           onPress: async () => {
             try {
               await eliminarHabito(id);
+              bumpVersion();
+
               setHabitos(habitos.filter((h) => h.id !== id));
             } catch (err: any) {
               Alert.alert('Error', 'No se pudo eliminar el hábito');
@@ -93,8 +99,12 @@ export default function HabitosScreen() {
     setRefreshing(false);
   };
 
+  const bumpVersion = useHabitosStatsStore((s) => s.bumpVersion);
+
+
   const cargarHabitos = async () => {
     try {
+
       setLoading(true);
       setError(null);
       const data = await obtenerHabitos();
@@ -117,6 +127,9 @@ export default function HabitosScreen() {
       );
 
       await actualizarHabito(id, !habito.completado);
+      bumpVersion();
+
+
     } catch (err: any) {
       setHabitos((prev) =>
         prev.map((h) => (h.id === id ? { ...h, completado: !h.completado } : h))
