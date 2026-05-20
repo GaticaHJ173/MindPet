@@ -62,9 +62,11 @@ export default function HomeScreen() {
     { title: 'Comunidad', icon: 'group', color: '#95E1D3', route: '/(tabs)/comunidad' },
   ];
 
-  const renderIcon = (item) => (
-    <MaterialIcons name={item.icon} size={52} color="#fff" />
+  const renderIcon = (item: any) => (
+    <MaterialIcons name={item.icon as any} size={52} color="#fff" />
   );
+
+
 
   return (
     <View style={styles.container}>
@@ -94,7 +96,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              onPress={() => router.push(item.route)}
+              onPress={() => router.push(item.route as any)}
               activeOpacity={0.8}
             >
               <View style={[styles.iconContainer, { backgroundColor: item.color }]}>

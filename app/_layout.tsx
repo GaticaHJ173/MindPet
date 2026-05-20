@@ -19,7 +19,11 @@ export default function RootLayout() {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         console.log('[AUTH] 📱 Session:', session?.user ? `${session.user.id} (${session.user.email})` : 'NO SESSION');
-if (session?.access_token && Date.parse(session.expires_at) < Date.now()) {
+if (
+          session?.access_token &&
+          typeof session.expires_at === 'string' &&
+          Date.parse(session.expires_at) < Date.now()
+        ) {
           console.log('[AUTH] ⚠️ Token expired, signing out');
           await supabase.auth.signOut();
           setSession(null);
